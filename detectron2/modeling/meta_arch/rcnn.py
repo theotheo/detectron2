@@ -59,8 +59,9 @@ class GeneralizedRCNN(nn.Module):
 
         storage = get_event_storage()
         max_vis_prop = 20
+        max_images = 5
 
-        for input, prop in zip(batched_inputs, proposals):
+        for i, (input, prop) in enumerate(zip(batched_inputs, proposals)):
             img = input["image"].cpu().numpy()
             assert img.shape[0] == 3, "Images should have 3 channels."
             if self.input_format == "BGR":
@@ -77,9 +78,10 @@ class GeneralizedRCNN(nn.Module):
             prop_img = v_pred.get_image()
             vis_img = np.concatenate((anno_img, prop_img), axis=1)
             vis_img = vis_img.transpose(2, 0, 1)
-            vis_name = "Left: GT bounding boxes;  Right: Predicted proposals"
+            vis_name = "Image {}; Left: GT bounding boxes;  Right: Predicted proposals".format(i)
             storage.put_image(vis_name, vis_img)
-            break  # only visualize one image in a batch
+            if i >= max_images:
+                break  # only visualize one image in a batch
 
     def forward(self, batched_inputs):
         """
